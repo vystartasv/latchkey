@@ -5,6 +5,23 @@ with a Unix socket daemon — agents get secrets without interactive auth.
 
 Solves the 1Password Touch ID deadlock for cron jobs.
 
+---
+
+### 🧸 If you're 5:
+
+Your robots need passwords to do their jobs — like a key to open a door.
+But the password-keeper (1Password) wants a fingerprint, and robots don't have fingers.
+
+Credential Proxy is like a trusted friend who:
+- 🔐 **Holds all the keys** in a locked box that only they can open
+- 🏠 **Lives in your house** (not on the internet — nobody outside can reach them)
+- 🤫 **Whispers passwords** to your robots through a special tube (a Unix socket)
+- 🧹 **Cleaned up** after borrowing your Chrome passwords (imported them, then deleted the file)
+
+Now your robots can open doors without needing fingers.
+
+---
+
 ## Install
 
 ```bash
