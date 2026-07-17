@@ -19,7 +19,11 @@ HERMES_DIR = os.path.expanduser("~/.hermes")
 
 
 def is_daemon_running() -> bool:
-    """Check if the Latchkey daemon is running."""
+    """Check whether the Latchkey daemon is accepting requests.
+
+    Returns:
+        True when the daemon responds through its Unix socket; otherwise False.
+    """
     if not os.path.exists(SOCKET_PATH):
         return False
     try:
@@ -35,7 +39,12 @@ def is_daemon_running() -> bool:
 
 
 def ensure_daemon() -> bool:
-    """Start the daemon if not running. Returns True if it's running after this."""
+    """Start the daemon when needed and wait for its socket.
+
+    Returns:
+        True if the daemon is running or its socket appears after startup;
+        otherwise False.
+    """
     if is_daemon_running():
         return True
 

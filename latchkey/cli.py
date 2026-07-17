@@ -67,7 +67,7 @@ def main():
         help="Path to Chrome CSV (default: auto-detect in ~/Downloads)"
     )
 
-    verify_p = subparsers.add_parser("verify", help="Verify encryption: spot-check decrypted credentials")
+    subparsers.add_parser("verify", help="Verify encryption: spot-check decrypted credentials")
 
     import_p = subparsers.add_parser("import-chrome", help="Import Google Chrome password CSV")
     import_p.add_argument(
@@ -99,10 +99,10 @@ def main():
 
     if args.command == "init":
         store = CredentialStore()
-        print(f"✓ Latchkey initialized")
+        print("✓ Latchkey initialized")
         print(f"  Master key: {store.key_path}")
         print(f"  Database:   {store.db_path}")
-        print(f"  Next: latchkey import-chrome ~/Downloads/Google\\ Passwords.csv")
+        print("  Next: latchkey import-chrome ~/Downloads/Google\\ Passwords.csv")
         return
 
     if args.command == "bootstrap":
@@ -146,8 +146,8 @@ def main():
                 print(f"  {status} {svc}{url_hint}")
 
         print(f"\n✓ Bootstrap complete. {result['imported']} credentials ready.")
-        print(f"  Start daemon: latchkey serve")
-        print(f"  Use in scripts: from latchkey.client import get_credential")
+        print("  Start daemon: latchkey serve")
+        print("  Use in scripts: from latchkey.client import get_credential")
         return
 
     if args.command == "verify":

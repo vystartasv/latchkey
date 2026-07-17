@@ -4,19 +4,15 @@ Tests for Latchkey — encrypted credential store.
 Run: python3 -m pytest latchkey/tests/ -v
 """
 
-import json
 import os
-import socket
 import sqlite3
 import tempfile
-import time
-from pathlib import Path
 
 import pytest
 
-from latchkey.core import CredentialStore, SCHEMA
+from latchkey.core import CredentialStore
 from latchkey.daemon import handle_request
-from latchkey.client import _call, get_credential, list_services, ping
+from latchkey import cli
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────
@@ -197,6 +193,34 @@ class TestStats:
         for i in range(5):
             store.add(f"site{i}.com", "user", "pass")
         assert store.stats()["total_credentials"] == 5
+
+
+# ── Legacy Migration Tests ───────────────────────────────────────────────
+
+class TestLegacyMigration:
+    def test_migrate_legacy_store_moves_files(self, tmp_path, monkeypatch):
+        legacy_dir = tmp_path / "legacy"
+        new_dir = tmp_path / "latchkey"
+        legacy_dir.mkdir()
+        for filename in (".master_key", "credentials.db"):
+            (legacy_dir / filename).write_text(filename)
+
+        monkeypatch.setattr(cli, "LEGACY_DIR", str(legacy_dir))
+        monkeypatch.setattr(cli, "LEGACY_SOCKET_PATH", str(legacy_dir / "proxy.sock"))
+        monkeypatch.setattr(cli, "DEFAULT_DIR", str(new_dir))
+
+        moved = cli.migrate_legacy_store()
+
+        assert len(moved) == 2
+        assert (new_dir / ".master_key").read_text() == ".master_key"
+        assert (new_dir / "credentials.db").read_text() == "credentials.db"
+        assert not (legacy_dir / ".master_key").exists()
+        assert not (legacy_dir / "credentials.db").exists()
+
+    def test_migrate_legacy_store_without_legacy_dir(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(cli, "LEGACY_DIR", str(tmp_path / "missing"))
+
+        assert cli.migrate_legacy_store() == []
 
 
 # ── Concurrency Tests ─────────────────────────────────────────────────────

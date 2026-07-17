@@ -17,3 +17,5 @@ Usage:
 """
 
 from .core import CredentialStore
+
+__all__ = ["CredentialStore"]
