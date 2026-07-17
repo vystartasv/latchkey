@@ -1,87 +1,100 @@
 # Latchkey
 
-Encrypted credential store that serves secrets to autonomous AI agents over a
-local Unix socket. Agents get passwords and API tokens without interactive auth —
-solving the "your password manager wants a fingerprint but cron jobs don't have
-fingers" problem.
+<!-- REPLACE_ME_DEMO_GIF -->
+
+Credentials for unattended AI agents. Password managers assume a human is present;
+Latchkey exists because yours isn't.
 
 ---
 
-## Summary
+[![PyPI](https://img.shields.io/pypi/v/latchkey)](https://pypi.org/project/latchkey/)
+[![CI](https://github.com/vystartasv/latchkey/actions/workflows/ci.yml/badge.svg)](https://github.com/vystartasv/latchkey/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/vystartasv/latchkey)](LICENSE)
 
-AI agents running on schedules (cron jobs, background tasks) often need passwords,
-API keys, or access tokens to do their work — publish a blog post, push to GitHub,
-send an email. But password managers and keychains require interactive
-authentication: a fingerprint, a master password, a hardware key tap. Scheduled
-agents can't provide that.
-
-Credentials for unattended AI agents. Password managers assume a human is present; Latchkey exists because yours isn't.
-
-Latchkey decrypts your credentials once when your machine boots, then
-holds them in memory behind a local Unix socket. Agents connect through that
-socket to retrieve credentials on demand — no Touch ID, no popups, no human in
-the loop.
-
-Everything stays on your machine. Nothing touches the network. Only your user
-account can read the socket.
-
----
-
-## Who it's for
-
-- Anyone running **scheduled AI agents** that need API keys, tokens, or
-  passwords to do their work
-- **CI-like pipelines on a local machine** where interactive auth is impossible
-- **Multi-agent fleets** that all need access to the same set of credentials
-- **macOS users** stuck behind Touch ID / Keychain prompts in cron contexts
-
-## Who it's NOT for
-
-- **Interactive-only use** — if you're always at the keyboard when credentials
-  are needed, use your normal password manager
-- **Public cloud or shared servers** — this is a single-user, local-machine
-  tool. Anyone with access to the socket has access to your credentials
-- **High-security enterprise** — secrets are decrypted at boot and held in
-  memory for the session. It's safe for personal use but not SOC2-compliant
-- **Password management** — this is a proxy, not a password manager. Credentials
-  are imported from Chrome or added manually
-
----
-
-## Install
+## Install and use
 
 ```bash
-pip install -e .
+pip install latchkey
+latchkey bootstrap
+latchkey serve
+# In any agent script:
+from latchkey.client import get_credential
+gh = get_credential("github.com")
+print(gh["password"])
 ```
 
-## Bootstrap
+## Why this exists
 
-```bash
-latchkey bootstrap                          # Init + import Chrome + verify
-latchkey import-chrome ~/Downloads/Google\ Passwords.csv
-latchkey add myservice user password --url https://example.com
-latchkey serve                              # Start daemon
+Cron jobs, background tasks, and scheduled agents sometimes need API keys or
+passwords. Interactive password managers such as 1Password expect a person to
+approve access; Latchkey deliberately does not provide that interaction. Cron
+jobs don't have fingers.
+
+Latchkey stores credentials locally and serves them to local processes through
+a Unix socket.
+
+## Who it's for / not for
+
+For local, unattended processes that need credentials: scheduled agents, cron
+jobs, and background tasks.
+
+Not for interactive-only use, shared or public machines, enterprise compliance
+requirements, or password-management workflows. Any process running as your
+user can read the socket — that's the design; don't run it on shared machines.
+
+## Security facts
+
+| Property | Detail |
+|----------|--------|
+| Encryption | Fernet (AES-128-CBC + HMAC-SHA256) at rest |
+| Socket | Unix socket chmod 600 — only your user connects |
+| Master key | 44 bytes, chmod 600, generated on first init |
+| Network | Zero — socket is local only |
+| Attestation | No remote attestation, no audit log, no SOC2 |
+
+## CLI reference
+
+```text
+latchkey init                          # Generate key + DB
+latchkey bootstrap                     # init + import Chrome + verify
+latchkey add <service> <user> <pass>   # Store a credential
+latchkey get <service>                 # Retrieve (JSON)
+latchkey list [--prefix PREFIX]        # List services
+latchkey delete <service>              # Delete
+latchkey serve                         # Start daemon
+latchkey stats                         # Store statistics
+latchkey migrate                       # Import from old credential-proxy path
 ```
 
-## Client (from agent scripts)
+## Python API
 
 ```python
-from latchkey.client import get_credential
+from latchkey.client import get_credential, list_services, ping
 from latchkey.launcher import ensure_daemon
 
-ensure_daemon()
-gh = get_credential("github.com")
-# → {"username": "vystartasv", "password": "***", "url": "https://github.com"}
+ensure_daemon()                         # Auto-start daemon
+gh = get_credential("github.com")       # → {"username": "...", "password": "..."}
+svcs = list_services(prefix="git")      # → {"services": [...], "count": 2}
+status = ping()                         # → {"status": "ok", "credentials": N}
 ```
 
-## Security
+## Optional: Chrome bulk import
 
-- **Fernet encryption** (AES-128-CBC + HMAC-SHA256) at rest
-- **Unix socket chmod 600** — only the owning user can connect
-- **Master key chmod 600** — 44 bytes, generated on first init
-- **All DB files chmod 600**
-- **Chrome CSV auto-deleted** after import
-- **No network exposure** — socket is local only
+Export passwords from Chrome to `Google Passwords.csv`, then import the file:
+
+```bash
+latchkey import-chrome path/to.csv
+```
+
+## Migration from credential-proxy
+
+If you used the old version:
+
+```bash
+latchkey migrate
+```
+
+This moves files from `~/.hermes/credential_proxy/` to `~/.latchkey/`.
 
 ## License
 
