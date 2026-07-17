@@ -96,6 +96,10 @@ latchkey migrate
 
 This moves files from `~/.hermes/credential_proxy/` to `~/.latchkey/`.
 
+---
+
+**Part of [Works With Agents](https://workswithagents.com).** See also [ORA](https://github.com/vystartasv/ora) (task orchestrator) and [Memory OS](https://github.com/vystartasv/memory-os) (persistent agent memory).
+
 ## License
 
 MIT
