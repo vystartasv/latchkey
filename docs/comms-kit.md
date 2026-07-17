@@ -8,13 +8,13 @@
 
 **Tweet 3:** Built 4 tools in a weekend:
 • Agent State DB — SQLite+WAL, atomic state, advisory locks, coordination
-• Credential Proxy — Fernet-encrypted, Unix socket daemon, imported 424 Chrome passwords
+• Latchkey — Fernet-encrypted, Unix socket daemon, imported 424 Chrome passwords
 • Context Packer — 2,521 files → 8 high-signal files
 • Cron Guard — auto-pause at 3 consecutive failures
 
 **Tweet 4:** The meta-lesson: infrastructure should be invisible to agents. They see `run_id: yyy` in their prompt and call `agent-state run finish` at the end. Everything else happens in the pre-cron hook.
 
-**Tweet 5:** All open-source (MIT). 32 tests, 0.13s suite. github.com/vystartasv/agent-state-db + github.com/vystartasv/credential-proxy
+**Tweet 5:** All open-source (MIT). 32 tests, 0.13s suite. github.com/vystartasv/agent-state-db + github.com/vystartasv/latchkey
 
 ---
 
@@ -27,7 +27,7 @@ Four gaps nobody talks about: shared state for concurrent agents, credential acc
 Built the fix in a weekend — four tools that run as invisible infrastructure before the agent even sees its prompt:
 
 • Agent State DB: SQLite+WAL, atomic key-value, advisory locks, cross-agent coordination
-• Credential Proxy: Fernet-encrypted secrets served over a Unix socket. Imported 424 passwords from Chrome.
+• Latchkey: Fernet-encrypted secrets served over a Unix socket. Imported 424 passwords from Chrome.
 • Context Packer: 2,521 files → 8 high-signal files. Local models can actually see what matters.
 • Cron Guard: Auto-pauses jobs after 3 consecutive failures.
 
@@ -45,7 +45,7 @@ If you're running agents from cron — especially local models — you're going 
 
 Built the missing infrastructure for autonomous AI agents:
 • `agent-state` — shared state DB with locks & coordination
-• `credential-proxy` — encrypted secrets, no Touch ID needed
+• `latchkey` — encrypted secrets, no Touch ID needed
 • `context-packer` — repo pruner for local models
 • `cron-guard` — auto-pause failing jobs
 
@@ -55,7 +55,7 @@ Built the missing infrastructure for autonomous AI agents:
 
 ## 4. Hacker News / Show HN
 
-**Title:** Show HN: Agent State DB + Credential Proxy — infrastructure for autonomous AI agents
+**Title:** Show HN: Agent State DB + Latchkey — infrastructure for autonomous AI agents
 
 I run 19 autonomous cron jobs (code review, self-improvement, disaster recovery) and kept hitting the same four gaps: no shared state, no credential access from cron, context window overflow for local models, and silent failure cascades.
 

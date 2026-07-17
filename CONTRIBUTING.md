@@ -1,12 +1,12 @@
-# Contributing to Credential Proxy
+# Contributing to Latchkey
 
 Thanks for contributing. Here's how to get started.
 
 ## Dev Environment
 
 ```bash
-git clone https://github.com/vystartasv/credential-proxy.git
-cd credential-proxy
+git clone https://github.com/vystartasv/latchkey.git
+cd latchkey
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```

@@ -1,5 +1,5 @@
 """
-Credential Proxy — Encrypted credential store for autonomous agents.
+Latchkey — Encrypted credential store for autonomous agents.
 
 Stores credentials encrypted at rest (Fernet + AES-128). Serves them over
 a local Unix socket so agents never need interactive auth.
@@ -19,10 +19,10 @@ from typing import Any, Optional
 from cryptography.fernet import Fernet
 
 
-DEFAULT_DIR = os.path.expanduser("~/.hermes/credential_proxy")
+DEFAULT_DIR = os.path.expanduser("~/.latchkey")
 MASTER_KEY_FILE = os.path.join(DEFAULT_DIR, ".master_key")
 DB_PATH = os.path.join(DEFAULT_DIR, "credentials.db")
-SOCKET_PATH = os.path.join(DEFAULT_DIR, "proxy.sock")
+SOCKET_PATH = os.path.join(DEFAULT_DIR, "latchkey.sock")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS credentials (

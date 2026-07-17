@@ -44,12 +44,12 @@ The `ON CONFLICT DO UPDATE SET version = version + 1 RETURNING version` is one S
 
 20 agents registered, 5 runs tracked, 0 active locks. The schema is five tables: `agents`, `runs`, `state_kv`, `locks`, `coordination`.
 
-### Credential Proxy — Encrypted Secrets Without Interactive Auth
+### Latchkey — Encrypted Secrets Without Interactive Auth
 
 A Unix socket daemon that serves Fernet-encrypted credentials from SQLite. Agents call a five-line client:
 
 ```python
-from credential_proxy.client import get_credential
+from latchkey.client import get_credential
 gh = get_credential("github.com")
 # → {"username": "vystartasv", "password": "ghp_...", "url": "https://github.com"}
 ```
@@ -94,10 +94,10 @@ The Cron Guard agent reads this JSON and calls `cronjob action=pause` with the a
 │   ├── agent_state.db          # SQLite+WAL, chmod 600, 5 tables
 │   ├── agent_state_db/         # Python package + CLI
 │   └── cron_guard.json         # Pause history
-├── credential_proxy/
+├── .latchkey/
 │   ├── credentials.db          # Fernet-encrypted, chmod 600
 │   ├── .master_key             # 44 bytes, chmod 600
-│   ├── proxy.sock              # Unix socket, chmod 600
+│   ├── latchkey.sock           # Unix socket, chmod 600
 │   └── daemon                  # launchd-managed, auto-restart
 ├── scripts/
 │   ├── pre_cron.py             # Unified hook: state DB + context packer
@@ -116,7 +116,7 @@ The Cron Guard agent reads this JSON and calls `cronjob action=pause` with the a
 The agent shouldn't know about state DB registration or context pruning. It should just see `agent_id: xxx` and `run_id: yyy` in its prompt, do its work, and call `agent-state run finish` at the end. The pre-cron hook handles everything else. Invisible infrastructure is the best infrastructure.
 
 **2. Python packages cannot have hyphens.**
-`credential-proxy/` → `ModuleNotFoundError`. `credential_proxy/` → works. Same mistake with Hermes plugins (`context_switcher`, not `context-switcher`). Symlinked CLI entrypoints also need hardcoded `sys.path` because `__file__`-based resolution breaks through symlinks. Both encoded in memory now, but they each cost 20 minutes of debugging.
+`latchkey/` → works. Symlinked CLI entrypoints also need hardcoded `sys.path` because `__file__`-based resolution breaks through symlinks. Both encoded in memory now, but they each cost 20 minutes of debugging.
 
 **3. Atomicity matters — use the database, not application locks.**
 The first `set_state` implementation did SELECT version → increment → INSERT. This is a classic read-modify-write race. The fix was one SQL statement: `ON CONFLICT DO UPDATE SET version = version + 1 RETURNING version`. If two agents increment simultaneously, the database handles it. Application-level locking would have been slower and buggier.
@@ -125,7 +125,7 @@ The first `set_state` implementation did SELECT version → increment → INSERT
 Cron Guard can't call `cronjob action=pause` from a standalone Python script — the Hermes tool API requires agent execution context. The pattern: script outputs structured JSON with instructions, the agent reads it and acts. This generalizes to any infrastructure tool that needs to call Hermes APIs.
 
 **5. Tests at 0.11 seconds are inexcusable to skip.**
-Eight tests for Agent State DB, 24 for Credential Proxy — both suites run in under 0.15s combined. They caught the `get_run` overwrite during patching, the `RETURNING` cursor ordering bug, and the race condition. At this speed, there's no reason not to have them.
+Eight tests for Agent State DB, 24 for Latchkey — both suites run in under 0.15s combined. They caught the `get_run` overwrite during patching, the `RETURNING` cursor ordering bug, and the race condition. At this speed, there's no reason not to have them.
 
 **6. Credential security is about defense in depth.**
 Fernet encryption at rest (credentials.db), chmod 600 on the DB file, chmod 600 on the master key, chmod 600 on the Unix socket, no network exposure, auto-delete the Chrome CSV after import. Any single layer failing shouldn't expose secrets.
@@ -137,7 +137,7 @@ Fernet encryption at rest (credentials.db), chmod 600 on the DB file, chmod 600 
 Everything is open-source under MIT:
 
 - **[Agent State DB](https://github.com/vystartasv/agent-state-db)** — `pip install -e .` — 8 tests, 0.05s
-- **[Credential Proxy](https://github.com/vystartasv/credential-proxy)** — `pip install -e .` — 24 tests, 0.08s
+- **[Latchkey](https://github.com/vystartasv/latchkey)** — `pip install -e .` — 24 tests, 0.08s
 - Context Packer + Cron Guard — bundled as scripts in the repos above
 
 ```bash
@@ -145,11 +145,11 @@ Everything is open-source under MIT:
 git clone https://github.com/vystartasv/agent-state-db
 cd agent-state-db && pip install -e .
 
-# Credential Proxy
-git clone https://github.com/vystartasv/credential-proxy
-cd credential-proxy && pip install -e .
-credential-proxy bootstrap  # Import Chrome passwords
-credential-proxy serve       # Start daemon
+# Latchkey
+git clone https://github.com/vystartasv/latchkey
+cd latchkey && pip install -e .
+latchkey bootstrap  # Import Chrome passwords
+latchkey serve       # Start daemon
 ```
 
 If you're running autonomous agents — especially local models, especially from cron — you're going to hit these same four gaps. The infrastructure matters more than the prompts. Feedback welcome.

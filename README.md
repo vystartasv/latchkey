@@ -1,4 +1,4 @@
-# Credential Proxy
+# Latchkey
 
 Encrypted credential store that serves secrets to autonomous AI agents over a
 local Unix socket. Agents get passwords and API tokens without interactive auth —
@@ -15,7 +15,9 @@ send an email. But password managers and keychains require interactive
 authentication: a fingerprint, a master password, a hardware key tap. Scheduled
 agents can't provide that.
 
-Credential Proxy decrypts your credentials once when your machine boots, then
+Credentials for unattended AI agents. Password managers assume a human is present; Latchkey exists because yours isn't.
+
+Latchkey decrypts your credentials once when your machine boots, then
 holds them in memory behind a local Unix socket. Agents connect through that
 socket to retrieve credentials on demand — no Touch ID, no popups, no human in
 the loop.
@@ -55,17 +57,17 @@ pip install -e .
 ## Bootstrap
 
 ```bash
-credential-proxy bootstrap                          # Init + import Chrome + verify
-credential-proxy import-chrome ~/Downloads/Google\ Passwords.csv
-credential-proxy add myservice user password --url https://example.com
-credential-proxy serve                              # Start daemon
+latchkey bootstrap                          # Init + import Chrome + verify
+latchkey import-chrome ~/Downloads/Google\ Passwords.csv
+latchkey add myservice user password --url https://example.com
+latchkey serve                              # Start daemon
 ```
 
 ## Client (from agent scripts)
 
 ```python
-from credential_proxy.client import get_credential
-from credential_proxy.launcher import ensure_daemon
+from latchkey.client import get_credential
+from latchkey.launcher import ensure_daemon
 
 ensure_daemon()
 gh = get_credential("github.com")

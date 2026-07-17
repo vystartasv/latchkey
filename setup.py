@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 setup(
-    name="credential-proxy",
+    name="latchkey",
     version="0.1.0",
-    description="Encrypted credential store for autonomous AI agents — robots don't have fingers",
+    description="Encrypted credential store for autonomous AI agents — agents let themselves in",
     long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -12,7 +12,7 @@ setup(
     python_requires=">=3.9",
     entry_points={
         "console_scripts": [
-            "credential-proxy=credential_proxy.cli:main",
+            "latchkey=latchkey.cli:main",
         ],
     },
 )

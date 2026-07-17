@@ -1,7 +1,7 @@
 """
-Tests for Credential Proxy — encrypted credential store.
+Tests for Latchkey — encrypted credential store.
 
-Run: python3.11 -m pytest ~/.hermes/credential_proxy/tests/ -v
+Run: python3 -m pytest latchkey/tests/ -v
 """
 
 import json
@@ -14,13 +14,9 @@ from pathlib import Path
 
 import pytest
 
-# Add ~/.hermes to path so we can import credential_proxy
-import sys
-sys.path.insert(0, os.path.expanduser("~/.hermes"))
-
-from credential_proxy.core import CredentialStore, SCHEMA
-from credential_proxy.daemon import handle_request
-from credential_proxy.client import _call, get_credential, list_services, ping
+from latchkey.core import CredentialStore, SCHEMA
+from latchkey.daemon import handle_request
+from latchkey.client import _call, get_credential, list_services, ping
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────

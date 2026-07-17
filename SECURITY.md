@@ -17,7 +17,7 @@ we'll release a fix as soon as possible — typically within 72 hours.
 
 ## Security Model
 
-Credential Proxy is a **local-only** tool designed for single-user machines.
+Latchkey is a **local-only** tool designed for single-user machines.
 It does not expose anything to the network.
 
 - **Encryption at rest**: Fernet (AES-128-CBC + HMAC-SHA256)
@@ -30,7 +30,7 @@ It does not expose anything to the network.
 
 ## Threat Model
 
-Credential Proxy assumes your local machine and user account are trusted.
+Latchkey assumes your local machine and user account are trusted.
 It does not protect against:
 
 - Malware running as your user (can read the socket)

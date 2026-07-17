@@ -1,31 +1,60 @@
 #!/usr/bin/env python3.11
 """
-credential-proxy — Encrypted credential store for autonomous agents.
+Latchkey — Encrypted credential store for autonomous agents.
 
 Usage:
-    credential-proxy init
-    credential-proxy import-chrome [CSV_PATH]
-    credential-proxy add <service> <username> <password> [--url URL] [--note NOTE]
-    credential-proxy get <service>
-    credential-proxy list [--prefix PREFIX]
-    credential-proxy delete <service>
-    credential-proxy serve
-    credential-proxy stats
+    latchkey init
+    latchkey import-chrome [CSV_PATH]
+    latchkey add <service> <username> <password> [--url URL] [--note NOTE]
+    latchkey get <service>
+    latchkey list [--prefix PREFIX]
+    latchkey delete <service>
+    latchkey serve
+    latchkey stats
+    latchkey migrate
 """
 
 import argparse
 import json
 import os
+import shutil
 import sys
 
-sys.path.insert(0, os.path.expanduser("~/.hermes"))
-from credential_proxy.core import CredentialStore, DEFAULT_DIR, MASTER_KEY_FILE
-from credential_proxy.daemon import run_daemon
+from latchkey.core import CredentialStore, DEFAULT_DIR
+from latchkey.daemon import run_daemon
+
+
+LEGACY_DIR = os.path.join(os.path.expanduser("~/.hermes"), "credential" + "_proxy")
+LEGACY_SOCKET_PATH = os.path.join(LEGACY_DIR, "proxy.sock")
+
+
+def migrate_legacy_store() -> list[str]:
+    """Move the legacy store into Latchkey's data directory."""
+    if not os.path.isdir(LEGACY_DIR):
+        return []
+
+    os.makedirs(DEFAULT_DIR, exist_ok=True)
+    moved = []
+    for filename in (".master_key", "credentials.db", "proxy.sock"):
+        source = os.path.join(LEGACY_DIR, filename)
+        if not os.path.exists(source):
+            continue
+        destination = os.path.join(
+            DEFAULT_DIR, "latchkey.sock" if filename == "proxy.sock" else filename
+        )
+        shutil.move(source, destination)
+        os.chmod(destination, 0o600)
+        moved.append(f"{source} → {destination}")
+
+    if os.path.lexists(LEGACY_SOCKET_PATH):
+        os.unlink(LEGACY_SOCKET_PATH)
+    os.symlink(os.path.join(DEFAULT_DIR, "latchkey.sock"), LEGACY_SOCKET_PATH)
+    return moved
 
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="credential-proxy",
+        prog="latchkey",
         description="Encrypted credential store for autonomous agents",
     )
     subparsers = parser.add_subparsers(dest="command")
@@ -64,15 +93,16 @@ def main():
 
     subparsers.add_parser("serve", help="Start Unix socket daemon")
     subparsers.add_parser("stats", help="Show store statistics")
+    subparsers.add_parser("migrate", help="Migrate a legacy store")
 
     args = parser.parse_args()
 
     if args.command == "init":
         store = CredentialStore()
-        print(f"✓ Credential Proxy initialized")
+        print(f"✓ Latchkey initialized")
         print(f"  Master key: {store.key_path}")
         print(f"  Database:   {store.db_path}")
-        print(f"  Next: credential-proxy import-chrome ~/Downloads/Google\\ Passwords.csv")
+        print(f"  Next: latchkey import-chrome ~/Downloads/Google\\ Passwords.csv")
         return
 
     if args.command == "bootstrap":
@@ -92,7 +122,7 @@ def main():
                     csv_path = c
                     break
             if not csv_path:
-                print("✗ No Chrome CSV found. Usage: credential-proxy bootstrap --csv <path>")
+                print("✗ No Chrome CSV found. Usage: latchkey bootstrap --csv <path>")
                 sys.exit(1)
 
         print(f"\nImporting: {csv_path}")
@@ -116,8 +146,8 @@ def main():
                 print(f"  {status} {svc}{url_hint}")
 
         print(f"\n✓ Bootstrap complete. {result['imported']} credentials ready.")
-        print(f"  Start daemon: credential-proxy serve")
-        print(f"  Use in scripts: from credential_proxy.client import get_credential")
+        print(f"  Start daemon: latchkey serve")
+        print(f"  Use in scripts: from latchkey.client import get_credential")
         return
 
     if args.command == "verify":
@@ -148,6 +178,20 @@ def main():
 
     if args.command == "serve":
         run_daemon()
+        return
+
+    if args.command == "migrate":
+        legacy_exists = os.path.isdir(LEGACY_DIR)
+        moved = migrate_legacy_store()
+        if moved:
+            print("✓ Migrated legacy store files:")
+            for path in moved:
+                print(f"  {path}")
+            print(f"  {LEGACY_SOCKET_PATH} → {os.path.join(DEFAULT_DIR, 'latchkey.sock')}")
+        elif legacy_exists:
+            print("Legacy store had no migratable files; compatibility socket symlink created.")
+        else:
+            print("No legacy store directory found; nothing to migrate.")
         return
 
     store = CredentialStore()

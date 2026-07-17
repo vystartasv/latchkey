@@ -1,10 +1,10 @@
 #!/usr/bin/env python3.11
 """
-Credential Proxy launcher — auto-starts daemon if not running.
+Latchkey launcher — auto-starts daemon if not running.
 Import this from pre-cron scripts or agent code.
 
 Usage:
-    from credential_proxy_launcher import ensure_daemon
+    from latchkey.launcher import ensure_daemon
     ensure_daemon()
 """
 
@@ -14,12 +14,12 @@ import subprocess
 import sys
 import time
 
-SOCKET_PATH = os.path.expanduser("~/.hermes/credential_proxy/proxy.sock")
+SOCKET_PATH = os.path.expanduser("~/.latchkey/latchkey.sock")
 HERMES_DIR = os.path.expanduser("~/.hermes")
 
 
 def is_daemon_running() -> bool:
-    """Check if the credential proxy daemon is running."""
+    """Check if the Latchkey daemon is running."""
     if not os.path.exists(SOCKET_PATH):
         return False
     try:
@@ -41,12 +41,12 @@ def ensure_daemon() -> bool:
 
     try:
         env = os.environ.copy()
-        # Ensure ~/.hermes is on PYTHONPATH so credential_proxy.daemon is importable
+        # Ensure ~/.hermes is on PYTHONPATH so latchkey.daemon is importable
         existing_path = env.get("PYTHONPATH", "")
         env["PYTHONPATH"] = f"{HERMES_DIR}:{existing_path}" if existing_path else HERMES_DIR
 
         subprocess.Popen(
-            [sys.executable, "-m", "credential_proxy.daemon"],
+            [sys.executable, "-m", "latchkey.daemon"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
@@ -65,7 +65,7 @@ def ensure_daemon() -> bool:
 
 if __name__ == "__main__":
     if ensure_daemon():
-        print("✓ Credential proxy daemon running")
+        print("✓ Latchkey daemon running")
     else:
         print("✗ Failed to start daemon")
         sys.exit(1)

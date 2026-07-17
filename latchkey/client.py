@@ -1,8 +1,8 @@
 """
-Credential Proxy client — importable library for agent scripts.
+Latchkey client — importable library for agent scripts.
 
 Usage:
-    from credential_proxy.client import get_credential, list_services
+    from latchkey.client import get_credential, list_services
     gh = get_credential("github.com")
     print(gh["username"], gh["password"])
 """
@@ -15,7 +15,7 @@ from .core import SOCKET_PATH
 
 
 def _call(action: str, **kwargs) -> dict:
-    """Send a request to the credential proxy daemon."""
+    """Send a request to the Latchkey daemon."""
     request = json.dumps({"action": action, **kwargs}) + "\n"
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

@@ -1,7 +1,7 @@
 """
-Credential Proxy daemon — Unix socket server.
+Latchkey daemon — Unix socket server.
 
-Listens on ~/.hermes/credential-proxy/proxy.sock.
+Listens on ~/.latchkey/latchkey.sock.
 Protocol: JSON request → JSON response, one per line.
 
 Actions:
@@ -59,7 +59,7 @@ def run_daemon():
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, shutdown)
 
-    print(f"Credential Proxy listening on {SOCKET_PATH}", file=sys.stderr)
+    print(f"Latchkey listening on {SOCKET_PATH}", file=sys.stderr)
 
     try:
         while True:
