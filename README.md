@@ -1,6 +1,6 @@
 # Latchkey
 
-<!-- REPLACE_ME_DEMO_GIF -->
+![Latchkey demo — credentials without interactive auth](docs/latchkey-demo.gif)
 
 Credentials for unattended AI agents. Password managers assume a human is present;
 Latchkey exists because yours isn't.
